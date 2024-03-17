@@ -23,8 +23,6 @@ void multuplixing(conf* conf)
         read_fds =  master_re;
         write_fds =  master_wr;
         // printf("waiting...\n");
-        // FD_SET(maxfd + 1, &master_re);÷
-        // printf("%d\n", )
         if (select(maxfd + 1, &read_fds, &write_fds, NULL, NULL) == -1)
             throw ("ERROR IN SELECT");
         for (int i = 0; i <= maxfd; i++){
