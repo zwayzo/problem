@@ -15,13 +15,16 @@ void multuplixing(conf* conf)
     FD_ZERO(&write_fds);
     FD_ZERO(&read_fds); //clear the sets
     signal(SIGTSTP, handleCtrlZ);
+    std::cout << "multuplixing...start\n";
     for (int j = 0; j < conf->serversNumber; j++)
         FD_SET(conf->ser[j].sock, &master_re);
     for (;;)
     {
         read_fds =  master_re;
         write_fds =  master_wr;
-        printf("waiting...\n");
+        // printf("waiting...\n");
+        // FD_SET(maxfd + 1, &master_re);÷
+        // printf("%d\n", )
         if (select(maxfd + 1, &read_fds, &write_fds, NULL, NULL) == -1)
             throw ("ERROR IN SELECT");
         for (int i = 0; i <= maxfd; i++){
@@ -41,6 +44,7 @@ void multuplixing(conf* conf)
                     FD_SET(newFd, &master_re);
                     if (newFd > maxfd)
                         maxfd = newFd;
+                    mycl[in - 1].track = 0;
                 }
                 else
                 {

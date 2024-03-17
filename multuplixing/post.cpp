@@ -56,7 +56,6 @@ void getRequestLenght(char *buf, client *cl) //get the request lenght of post so
 std::string getExtention(char *buf) //get the extention of what i receive (post)
 {
     std::string tmp = buf;
-
     size_t pos = tmp.find("Content-Type:");
     int i = 0;
     pos += 14;
@@ -65,7 +64,7 @@ std::string getExtention(char *buf) //get the extention of what i receive (post)
     pos++;
     char *ret;
     int j = pos;
-    for (; tmp[j] != '\n'; j++)
+    for (; tmp[j] && tmp[j] != '\n'; j++)
         j++;
     ret = new char[j - pos];
     while (tmp[pos] != '\n')
