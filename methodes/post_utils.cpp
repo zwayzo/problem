@@ -1,31 +1,19 @@
-#include "../headers/multuplixing.hpp"
-
-int randomNum() //get rendom number to add it in file[number].extention (post method)
-{
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    
-    // Generate a random number between 1 and 1000
-    return ((std::rand() % 1000) + 1);
-    
-}
-
-void getMethodes(std::string buf, client *cl) //check if the method is post to work with
-{
-    cl->req.method = 1;
-    if (std::strncmp(buf.c_str(), "POST", 4) == 0)
-        cl->req.post = 1;
-}
+#include "../multuplixing/client.hpp"
+#include "post.hpp"
 
 int creatFile(int fd, char *buf, client *cl) //creat the file (file+'random number' +.'extention)
 {
     (void)fd;
     getRequestLenght(buf, cl);
-    printf("in cre:%lld\n",  cl->req.contentLenght);
+    // printf("in cre:%lld\n",  cl->req.contentLenght);
     std::string tmp = "file";
     std::stringstream s;
     s << randomNum();
     tmp += s.str();
-    tmp +=  s.str() + '.' +  getExtention(buf);
+    tmp = cl->clientServer.uploads + '/' + tmp + '.' +  getExtention(buf);
+    std::cout << tmp << '\n';
+    // exit(1);
+
     cl->req.fileIndex = 1;
     cl->req.fileD.open(tmp.c_str(), std::ios::out);
     if (cl->req.fileD.is_open())
@@ -37,22 +25,6 @@ int creatFile(int fd, char *buf, client *cl) //creat the file (file+'random numb
     return (getBody(buf));
 }
 
-void getRequestLenght(char *buf, client *cl) //get the request lenght of post so to know how many time i nead to read(post)
-{
-    std::string tmp = buf;
-    size_t pos = tmp.find("Content-Length: ");
-    std::string t;
-    pos += 16;
-    while (tmp[pos] != '\n'){
-        t = t + tmp[pos];
-        pos++;
-    }
-    if (std::atoi(t.c_str()) < 0)
-        cl->req.contentLenght = strtoll(t.c_str(), NULL, std::strlen(t.c_str()));
-    else
-        cl->req.contentLenght = std::atoi(t.c_str());
-    std::cout << "contentLenght: ----------------| " << cl->req.contentLenght << " |\n";
-}
 
 std::string getExtention(char *buf) //get the extention of what i receive (post)
 {

@@ -17,6 +17,7 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include<string>
 #include <ctime>
 
 class request
@@ -33,6 +34,14 @@ class request
         std::ofstream fileD;
         int method;
         long long track;
+
+        int port;
+        int post_indice;
+        int get;
+        int del;
+
+        std::string upload;
+
     public:
         request();
         request (const request &copy);

@@ -1,6 +1,7 @@
-#include "../headers/request.hpp"
+#include "request.hpp"
 
-request::request() : fileIndex(0), post(0){};
+request::request() : fileIndex(0), post(0){
+};
 
 request::request (const request &copy)
 {
@@ -11,7 +12,7 @@ request::request (const request &copy)
     this->contentLenght = copy.contentLenght;
     this->track = copy.track;
     this->fd = copy.fd;
-    // this->first = copy.first;
+    this->first = copy.first;
 };
 
 request& request::operator=(const request &copy)

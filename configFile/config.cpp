@@ -1,4 +1,61 @@
-#include "../headers/configFile.hpp"
+#include "configFile.hpp"
+
+server::server() {}
+
+server::server(int n) : number(n){}
+
+server::server(const server& copy) {
+        this->post = copy.post;
+		this->get = copy.get;
+        this->deletee = copy.deletee;
+        this->methodes_number = copy.methodes_number;
+        this->locationsNumber = copy.locationsNumber;
+
+		this->name = copy.name;
+        this->listen = copy.listen;
+        this->autoindex = copy.autoindex;
+        this->max_size = copy.max_size;
+		this->root = copy.root;
+        this->uploads = copy.uploads;
+        this->_methods = copy._methods;//
+        this->error_page = copy.error_page;
+        this->index = copy.index;
+		this->redirection = copy.redirection;
+            // Copy the location objects
+		this->loc.resize(copy.loc.size()); // Ensure the same size
+		for (size_t i = 0; i < copy.loc.size(); ++i) {
+        	this->loc[i] = copy.loc[i]; // Assuming location has a proper copy constructor
+        }
+}
+
+server& server::operator=(const server& copy) {
+    if (this != &copy) {
+		this->post = copy.post;
+		this->get = copy.get;
+        this->deletee = copy.deletee;
+        this->methodes_number = copy.methodes_number;
+        this->locationsNumber = copy.locationsNumber;
+
+		this->name = copy.name;
+        this->listen = copy.listen;
+        this->autoindex = copy.autoindex;
+        this->max_size = copy.max_size;
+		this->root = copy.root;
+        this->uploads = copy.uploads;
+        this->_methods = copy._methods;//
+        this->error_page = copy.error_page;
+        this->index = copy.index;
+		this->redirection = copy.redirection;
+            // Copy the location objects
+		this->loc.resize(copy.loc.size()); // Ensure the same size
+		for (size_t i = 0; i < copy.loc.size(); ++i) {
+        	this->loc[i] = copy.loc[i]; // Assuming location has a proper copy constructor
+    	}
+    }
+	return *this;
+}
+
+server::~server() {}
 
 void stockLocation(conf *conf, int indice)
 {
@@ -67,10 +124,7 @@ conf* fileConfiguration(conf *conf, std::string file)
         serverSize(conf->allIn, j, conf);
         stockserver(conf->allIn, conf, j);
         checkAcollade(conf->ser[j]);
-        conf->ser[j].get = 0;
-        conf->ser[j].deletee = 0;
-        conf->ser[j].post = 0;
-        conf->ser[j].autoindex = 2;
+        init_variables(conf->ser[j]);
         conf->ser[j].locationsNumber = locationsNumbers(conf->ser[j].mySer);
         conf->ser[j].loc.reserve(conf->ser[j].locationsNumber);
         stockLocation(conf, j);
@@ -78,8 +132,10 @@ conf* fileConfiguration(conf *conf, std::string file)
         wordCounter(conf->ser[j]);
         conf->ser[j].info = new infos;
         conf->ser[j].info = checkValue(conf->ser[j].mySer, conf->ser[j].info, conf->ser[j]);
-        // printArguments(conf->ser[j].info, conf->ser[j].locationsNumber, conf->ser[j]);
+        checkConfigFileRules(conf->ser[j]);
+        printArguments(conf->ser[j].info, conf->ser[j].locationsNumber, conf->ser[j]);
+        printf("\n-------------------------------------------------------------------\n");
     }
-        // exit(1);
+    // exit(1);
     return (conf);
 }
