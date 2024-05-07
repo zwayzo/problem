@@ -1,38 +1,16 @@
-#include "headers/header.hpp"
-
+#include "conf/configFile.hpp"
+#include "multuplixing/multuplixing.hpp"
 int main(int ac, char **av)
 {
-    if (ac > 2) {
-        std::cerr << "Error: wrong nbr of arguments!" << std::endl;
-        return 1;
-    }
-    std::string conFile;
-    if (ac == 2)
-        conFile = av[1];
-    else
-        conFile = "cfgFiles/configFile.conf";
-
-    
-    conf *config = new conf;
-    multuplix *multup = new multuplix;
-    try{
-        config = fileConfiguration(config, conFile);
-        multup->multuplixing(config);
-    }
-    catch (const char *x)
+    server *myServer;
+    (void )myServer;
+    try
     {
-        // std::cout << "enter\n";
-        std::cout << x << '\n' << "errno set to " <<  strerror(errno) << '\n';
-        exit(1);
+        myServer = parseUser(ac, av);
+        multuplixing(myServer);
     }
-    catch (...)
+    catch(const std::exception& e)
     {
-        std::cout << "unhandled exception...!\n";
-    }
-    for (int i = 0;i < config->serversNumber; i++)
-        delete config->ser[i].info;
-    delete (config);
-    delete multup;
-
-    return 0;
+        std::cerr << e.what() << '\n';
+    } 
 }

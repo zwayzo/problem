@@ -1,132 +1,107 @@
 #include "multuplixing.hpp"
-// #include "../response/HttpResponse.hpp"
-// #include "../request/HttpRequest.hpp"
-#include "client.hpp"
-class HttpResponse;
+#include <poll.h> // Include for poll
 
-multuplix::multuplix(){}
 
-multuplix::multuplix(multuplix &copy) {
-	(void)copy;
-}
-
-multuplix::~multuplix(){}
-
-client&	returnClient(std::map<int, client> mycl, int i)
+void handleCtrlZ(int signum)
 {
-	std::map<int, client>::iterator iter = mycl.lower_bound(i);
-    // std::cout << "i is : | " << i << " | \n";
-    // std::cout << "client fd : | " << iter->second.req.fd << " | \n";
-	// iter->second.clientFd = this->currentFdToWorkWith;
-	// std::cout << "second fd : " << iter->second.clientFd << "\n";
-	// std::cout << "HELLLO : " << iter->second.stageForClient << std::endl;
-	return (iter->second);
+    (void )signum;
+
+    // Raise the SIGINT signal to terminate the program
+    std::raise(SIGINT);
 }
 
-void	multuplix::multuplixing(conf* conf)
+int maxFd(server* ser)
 {
-    fd_set master_re, master_wr, read_fds, write_fds;    // master_re file descriptor list
-    int maxfd, clSocket, in = 0;
-    getSocket(conf);
-    maxfd = maxFd(conf);
+    int tmp = 0;
 
-	FD_ZERO(&master_re);
-    FD_ZERO(&master_wr);
-    FD_ZERO(&write_fds);
-    FD_ZERO(&read_fds); //clear the sets
-    signal(SIGTSTP, handleCtrlZ);
-    std::cout << "multuplixing...start\n";
-    for (int j = 0; j < conf->serversNumber; j++)
-        FD_SET(conf->ser[j].sock, &master_re);
-    for (;;)
-    {
-		read_fds =  master_re;
-        write_fds =  master_wr;
-        // printf("waiting...\n");
-        if (select(maxfd + 1, &read_fds, &write_fds, NULL, NULL) == -1)
-            throw ("ERROR IN SELECT");
-        for (int i = 0; i <= maxfd; i++){
-            if(FD_ISSET(i, &read_fds) || FD_ISSET(i, &write_fds))
-            {
-                if (!validSocket(i, conf))
-                {
-                    if ((clSocket = accept(i, NULL, NULL)) == -1)
-                        throw ("ERROR IN ACCEPTING\n");
-                    std::cout << "new connection\n";
-                    printf("accept...\n");
-                    client tmp;
-                    tmp = attachClientServer(i, conf, tmp, in, clSocket);
-                    tmp.req.first = 0;
-                    in++;
-                    mycl.insert(std::pair<int, client>(clSocket, tmp));
-                    conf->vec.push_back(clSocket);
-                    FD_SET(clSocket, &master_re);
-					// _httpRequest[clSocket] = HttpRequest(clSocket, mycl[clSocket].clientServer);
-					// _httpResponse[clSocket] = HttpResponse(clSocket, mycl[clSocket].clientServer);
-                    if (clSocket > maxfd)
-                        maxfd = clSocket;
-                }
-                else
-                {
-                    std::map<int, client>::iterator iter = mycl.lower_bound(i); //iter to the client with the same socket as the server
-					int _clSock = iter->first;
-                    if (FD_ISSET(i, &read_fds)){
-                        client cl = iter->second;
-                        // std::cout << "client upload is : ----------------| " << cl.post << " |---------------\n";
+    if (ser->sock > tmp)
+            tmp = ser->sock;
+    return tmp;
 
-                        int nbytes = recv(i, cl.req.buff, sizeof(cl.req.buff), 0);
-                        std::cout << "----\n" << cl.req.buff << "--------\n";
-                        if (nbytes == -1)
-                            throw ("Error: recv failed\n");
-						cl.req.buff[nbytes] = '\0';
-						if (nbytes == 0) {
-							std::cout << "\rConnection was closed by client.\n" << std::endl;
-							// _httpRequest.erase(_clSock);
-							// _httpResponse.erase(_clSock);
-							close(_clSock); //should close the client connection
-                        }
-						// _httpRequest[_clSock].parseHttpRequest(cl.req.buff, nbytes);
-                        // std::cout << _httpRequest[_clSock].getRequest();
-                        std::cout << "FinREQUEST\n";
-						//should check th first time body
-                        // post_contentLenght(iter, i, nbytes);
-                        if (nbytes > 0){
-                            if (iter->second.req.track >= iter->second.req.contentLenght){
-                                printf("time to clear\n");
-                                clearSets(&iter->second, i, &iter->second.req.track, &iter->second.req.first, &master_re, &master_wr);
-                            }
-                        }
-                    }
-                    if(FD_ISSET(i, &write_fds)){
-						int response = 0;
-						// if (_httpRequest[_clSock].getCodeError()) == 0) {
-						// 	//CGI handler
-						// 	//cgi Done
-						// 	//send resp
-						// response = _httpResponse[_clSock].sendResponse(_httpRequest[_clSock], _cgi);
-						// }
-						// else {
-						// 	//send response
-							// response = _httpResponse[_clSock].sendResponse(_httpRequest[_clSock]);//NULL MEANS NO CGI
-						// }
-                        // printf("not new connection in write\n");
-                        // send(i, "slma", 5, 0);
-                        //send response
-                        FD_CLR(i, &master_wr);
-                        close (i);
-                        mycl.erase(i);
-
-                        // std::map<int, client>::iterator iter;
-                        // for (iter = mycl.begin(); iter != mycl.end(); ++iter) {
-                        //     std::cout << "loop ----------------- : " << iter->first << ": " << iter->second.req.fd << std::endl;
-                        // }
-
-                        conf->vec.erase(std::remove(conf->vec.begin(), conf->vec.end(), i));
-                    }
-                }
-            }
-        }
-    }
 }
+
+void multuplixing(server* ser)
+{
+    
+    // std::map <int, client> mycl;
+    // fd_set master_re, master_wr, read_fds, write_fds;    // master_re file descriptor list
+    // int maxfd, newFd, in = 0;
+    // getSocket(ser);
+    // maxfd = maxFd(ser);
+
+    // FD_ZERO(&master_re);
+    // FD_ZERO(&master_wr);
+    // FD_ZERO(&write_fds);
+    // FD_ZERO(&read_fds); //clear the sets
+    // // signal(SIGTSTP, handleCtrlZWrapper);
+    // std::cout << "multuplixing...start\n";
+    // FD_SET(ser->sock, &master_re);
+    // for (;;)
+    // {
+    //     read_fds =  master_re;
+    //     write_fds =  master_wr;
+    //     printf("maxfd is:%d|%d\n",maxfd, ser->sock);
+
+    //     if (select(maxfd + 1, &read_fds, &write_fds, NULL, NULL) == -1){
+    //         perror("select");
+    //         throw ("ERROR IN SELECT");
+    //     }
+
+    //     for (int i = 0; i  <= maxfd; i ++){
+    //         if(FD_ISSET(i , &read_fds) || FD_ISSET(i , &write_fds))
+    //         {
+    //             if (!validSocket(i , ser))
+    //             {
+    //                 if ((newFd = accept(i , NULL, NULL)) == -1)
+    //                     throw ("ERROR IN ACCEPTING\n");
+    //                 std::cout << "new connection\n";
+    //                 if (fcntl(newFd, F_SETFL, O_NONBLOCK) == -1)
+    //                     throw std::runtime_error("Error: fcntl() failed");
+    //                 // printf("accept...\n");
+    //                 client tmp;
+    //                 tmp.req.fd = newFd;
+    //                 in++;
+    //                 mycl.insert(std::pair<int, client>(newFd, tmp));
+    //                 ser->client.push_back(newFd);
+    //                 FD_SET(newFd, &master_re);
+    //                 if (newFd > maxfd)
+    //                     maxfd = newFd;
+    //             }
+    //             else
+    //             {
+    //                 if (FD_ISSET(i , &read_fds)){
+    //                     std::map<int, client>::iterator iter = mycl.lower_bound(i );
+    //                     client client = iter->second;
+    //                     int nbytes = recv(i , iter->second.req.buff, sizeof(iter->second.req.buff), 0);
+    //                     printf("---\n%s\n-----\n", iter->second.req.buff);
+    //                     printf("her{%d}%d\n",nbytes,i);
+    //                     sleep(1);
+    //                     if (nbytes == -1){
+    //                         std::cout << "errno set to " <<  strerror(errno) << '\n';
+    //                         throw std::runtime_error("error in recv\n");
+    //                     }
+    //                     if (nbytes > 0){
+    //                         //parse demande
+    //                         clearSets(i , &master_re, &master_wr);
+    //                         }
+    //                     }
+    //                     //working on request workRequest(buf);
+    //                 }
+    //                 if(FD_ISSET(i , &write_fds)){
+    //                     send(i , "slma", 5, 0);
+    //                     //send response
+    //                     FD_CLR(i , &master_wr);
+    //                     FD_CLR(i , &read_fds);
+    //                     FD_CLR(i , &write_fds);
+    //                     close (i );
+    //                     mycl.erase(i );
+    //                     // conf->vec.erase(std::remove(conf->vec.begin(), conf->vec.end(), i ));
+    //                 }
+    //         }
+    //     }
+    // }
+}
+
+
 
 //51154
